@@ -1,8 +1,180 @@
 ---
-title: "Project 1"
-author: "Me"
-date: "2020-12-01"
+title: "NBA Draft-2018-2019_Project1"
 output: html_document
 ---
 
-## Test Project 1
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(tidyverse)
+library(pastecs)
+library(Hmisc)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", 
+                      warning = F, message = F, tidy = TRUE, tidy.opts = list(width.cutoff = 60), 
+                      R.options = list(max.print = 100))
+
+nbadraft2019 <- read.csv("nbadraft2019.csv", 
+                  header = TRUE, 
+                   quote="\"", 
+                  stringsAsFactors= TRUE, 
+                 strip.white = TRUE)
+
+nbadraft2018 <- read.csv("nbadraft2018.csv", 
+                         header = TRUE, 
+                         quote="\"", 
+                         stringsAsFactors= TRUE, 
+                         strip.white = TRUE)
+```
+
+The two data sets I chose are the first 53 draft picks for the NBA in 2018 and 2019. The variables in each data set are roughly the same, these being the players name, their total games played, total minutes played, the college they went to, their field goal percentage, three point percentage, points per game, assists per game, minutes played per game, etc. These data sets were acquired from a Basketball Reference website that had the draft pick statistics for each year. These data sets are interesting to me because I have been watching the NBA since I was little and really like basketball.
+
+```{r}
+nba_joined_2019_2018 <- nbadraft2019 %>% left_join(nbadraft2018, by = "Pk")
+```
+I chose to join the two data sets using the left_join function with the common varibale being "Pk" or each players draft pick number. I chose to do a left_join instead of a full_join because it still allowed for all variables to be intact, without having to drop anything. 
+
+```{r}
+filter(nba_joined_2019_2018, (Total_PTS.x > 1000 & Total_PTS.y > 1000))
+TotalPTS_Over1000 <- filter(nba_joined_2019_2018, (Total_PTS.x > 1000 & Total_PTS.y > 1000))
+```
+
+
+```{r}
+TotalPTS_Over1000 %>% pivot_longer(c(Per_Game_AST.x, Per_Game_MP.x, Per_Game_PTS.x))
+pivot_totalPTS_Over1000 <- TotalPTS_Over1000 %>% pivot_longer(c(Per_Game_AST.x, Per_Game_MP.x, Per_Game_PTS.x))
+
+pivot_totalPTS_Over1000 %>% pivot_wider(names_from = name, values_from = value)
+```
+
+
+```{r}
+arrange(TotalPTS_Over1000, Total_PTS.x)
+TotalPTS_arrange <- arrange(TotalPTS_Over1000, Total_PTS.x)
+```
+
+```{r}
+select(nba_joined_2019_2018, Player.y, Total_PTS.y, Total_MP.y, Total_AST.y, Total_G.y)
+
+Totals_2018 <- select(nba_joined_2019_2018, Player.y, Total_PTS.y, Total_MP.y, Total_AST.y, Total_G.y)
+
+
+mutate(Totals_2018, PtsPERGAME.y = Total_PTS.y / Total_G.y, MpPERGAME.y = Total_MP.y / Total_G.y, AstPERGAME.y = Total_AST.y / Total_G.y)
+```
+
+```{r}
+ by_TotalG <- group_by(nba_joined_2019_2018, Total_G.x)
+summarise(by_TotalG, PTSPERGAME = mean(Per_Game_PTS.x, na.rm = TRUE))
+
+```
+```{r}
+nba_joined_2019_2018 %>% summarise_all(n_distinct)
+nba_joined_2019_2018 %>% summarise_all(mean)
+nba_joined_2019_2018 %>% summarise_if(is.numeric, sd, na.rm = T)
+nba_joined_2019_2018 %>% summarise_if(is.numeric, var, na.rm = T)
+nba_joined_2019_2018 %>% summarise_if(is.numeric, quantile, na.rm = T)
+nba_joined_2019_2018 %>% summarise_if(is.numeric, min, na.rm = T)
+nba_joined_2019_2018 %>% summarise_if(is.numeric, max, na.rm = T)
+```
+I chose to use summarise_all(n_distinct) to obtain the number of distinct values in each column. I chose summarise_all(mean) to obtain the average of the values in each column. I chose summarise_if(sd) to obtain the standard deviation of each column, with _if(is.numeric) so we can leave out the non-numeric columns. This was repeated another 4 times with different functions to get the variance, quantile, min, and max of each variable in the data set. The most interesting thing that came from these was that the average years played in college was 1.8 for the 2019 draft, the reason this is interesting is because there are 4 years of college, most of these players did not come back for their second or third year at their respecrted university. (which of course makes sense to go to the NBA and make a lot of money for their talent) Another thing that I found intersting was that the minimum value for games played was 4, the reason I found this so interesting was because I am very curious how someone got drafted into the NBA top 53, with only showing their skills in 4 games through out the entire season.
+
+```{r}
+
+nba_joined_2019_2018 %>% summarise(cor(FG..x, FG..y, use="pair"))
+
+select(nba_joined_2019_2018, Player.x, Total_PTS.x, Total_MP.x, Total_AST.x, Total_G.x, Player.y, Total_PTS.y, Total_MP.y, Total_AST.y, Total_G.y)
+
+All_Totals <- select(nba_joined_2019_2018, Player.x, Total_PTS.x, Total_MP.x, Total_AST.x, Total_G.x, Player.y, Total_PTS.y, Total_MP.y, Total_AST.y, Total_G.y)
+
+All_Totals %>% select_if(is.numeric) %>% cor(use="pair")
+cormat <- All_Totals %>% select_if(is.numeric) %>% cor(use="pair")
+
+tidycor <- cormat %>% as.data.frame %>% rownames_to_column("var1") %>%  pivot_longer(-1,names_to="var2",values_to="correlation")
+
+tidycor %>% ggplot(aes(var1,var2,fill=correlation)) +  
+  geom_tile() +  
+  scale_fill_gradient2(low="white",mid="darkturquoise",high="deeppink3") + 
+  geom_text(aes(label=round(correlation,2)), color = "black", size = 4) + 
+  theme(axis.text.x = element_text(angle = 90, hjust=1)) + 
+  coord_fixed() 
+
+```
+This correlation heat map shows the correlation between many different variables present. I chose to use the "Totals" from the selected data set, this means that I selected total points scored from the 2018 and 2019 draft players, the total minutes played from the 2018 and 2019 draft players, the total games played from the 2018 and 2019 draft players, and the total assists made from the 2018 and 2019 draft players. As you can see, the greatest correlation between two variables is 1, and the lowest correlation between two variables is 0. To look at some of the correlations, we see that the total points scored by the 2018 draft has a correlation factor of 0.88 to the total assists made by the 2018 draft, which is a fairly large correlation. We also see that the total assists made by the 2019 draft has a correlation factor of 0.23 with the total games played of the 2018 draft, this makes sense because of course the total assists of one draft year is not going to have anything to do with the total games played of another draft year players.
+
+```{r}
+ggplot(data = nba_joined_2019_2018, aes(x = Pk, y = Total_PTS.x)) + 
+  geom_point(size=3, aes(color = FG..x)) +
+  xlab("Draft Pick Number") + 
+  ylab("Total Points Scored in Season") + 
+  labs(color = "Field Goal Percentage") + 
+  scale_color_gradient(low="yellow", high="purple")
+  
+
+```
+This scatterplot shows the Draft Pick Number on the x axis, with the person drafted first on the very left and the person drafted last in the data on the far right. The y axis is the Total points scored throughout the entire season. The third variable is the Field goal percentage, which is shown from the color of the dot, with bright yellow being the lowest, and dark purple being the brightest. There is an obvious negative trend, as the draft picks get worse and worse, the total points scored in the season just decreases, which kinda makes sense if you think about how the best player is going to have scored a large amount of points and the last person drafted is going to have a significantly lower amount of points scored. The field goal percentage is more or less evenly spread out through out the plot, that shows that there is not a positive or negative trend.
+
+
+
+
+```{r}
+ggplot(nba_joined_2019_2018, aes(x = Player.x)) +
+geom_bar(aes(y = Per_Game_PTS.y, fill = Total_G.x), stat ="summary", fun=mean) + 
+  theme(axis.text.x = element_text(angle=53, hjust=1)) + 
+  xlab("NBA Player Name") + 
+  ylab("Points Scored Per Game") +
+  labs(fill = "Total Games Played") +
+  scale_fill_gradient2(low="white",mid="blue",high="green")
+
+```
+This histogram shows all NBA player names from the 2019, with their points scored per game on the y axis, and the total amount of games played for the third variable. As you can see, RJ Barett as the highest amount of points scored per game, with Jarrell Brantley having the fewest. We can also see that Jaxson Hayes has played the most games with his bar being the brightest green, and Marial Shayok having the played the fewest games throughout the season.
+
+```{r}
+library(cluster)
+select(nba_joined_2019_2018, Rk.x, FT..x, X3P..x)
+clust_data <- select(nba_joined_2019_2018, Rk.x, FT..x, X3P..x) %>% scale()
+
+
+sil_width<-vector() #empty vector to hold mean sil width
+for(i in 2:10){  
+  kms <- kmeans(clust_data,centers=i) #compute k-means solution
+  sil <- silhouette(kms$cluster,dist(clust_data)) #get sil widths
+  sil_width[i]<-mean(sil[,3]) #take averages (higher is better)
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+
+
+kmeans11 <- clust_data %>% kmeans(3)
+kmeans11
+```
+First I selected specific variables to use for this part of the project, these being the player ranking, their free throw percentage, and their three point percentage. Once that was done, I piped it with scale() because the player rankings have values greater than the free throw percentage values. To do the cluster I had to first figure out how many clusters I wanted to use. This was done using the silhouette width indexes, which was ran with clusters from 2 to 10. The output was a graph showing me which amount of clusters would work best due. After choosing 3 clusters I piped my first selected vector with kmeans(3), which outputs more information than we need. I then added the cluster vector back to the original data set by making a new column using mutate().
+
+```{r}
+
+kmeansclust <- clust_data %>% as.data.frame %>% mutate(cluster = as.factor(kmeans11$cluster)) 
+kmeansclust
+
+kmeansclust %>% ggplot(aes(Rk.x, FT..x, X3P..x, color = cluster)) + geom_point()
+
+library(GGally)
+ggpairs(kmeansclust, columns = 1:3, aes(color = cluster))
+
+```
+
+I then plotted this new selected data into ggplot to see how the clusters were plotted. To see all possible graphs with the three different variables I used ggpairs(). The output was the figure with the nine graphs. For these graphs there are many different things to look at, first, there are three x variables and three y variables, which, when are all put together, output the 9 figures. 
+
+Looking at the graph where Player Rank is the x value and 3 point percentage is the y value, we can see that the red cluster is the higher ranked players (higher ranked as in lower numerical value), with a higher 3 point percentage. The green cluster is the players with a medium rank, and a medium 3 point percentage. The blue cluster is the players with lower ranks, and lower 3 point percentage. 
+Looking at the plot where the x value is the player rank, and the y value is the free throw percentage, we can see that the red cluster is the players with higher rank and higher free throw percentage. The green cluster is the players with medium rank and medium-high free throw percentage. The blue cluster is the players with low rank and low free throw percentage. 
+Looking at the graph where free throw percentage is the x value and three point percentage is the y value, the red cluster is the players with a medium-high free point percentage and a high three point percentage. The green cluster is the players with the higher free throw percentage and a medium-high three point percentage.  The blue cluster has players with low free throw percentage and a low three point percentage. 
+The three diagonal graphs show the same thing except they color filled. The other three graphs shows the correlation value for each variable compared to the other variables. 
+
+
+
+
+

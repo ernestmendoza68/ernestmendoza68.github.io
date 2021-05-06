@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Chris Turner" />
+    <meta name="author" content="Ernesto Mendoza" />
     
     <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
-    <title>Project 2</title>
+    <title>Project 2: Modeling, Testing, and Predicting</title>
     <meta name="generator" content="Hugo 0.83.1" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../../css/main.css" />
@@ -54,13 +54,13 @@
       <div class="container">
         <div class="blog-post">
           <h3>
-            <strong><a href="../../project/project2/">Project 2</a></strong>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
           </h3>
         </div>
  
 <div class="blog-title">
           <h4>
-         December 1, 2020 
+         January 1, 0001 
             &nbsp;&nbsp;
             
           </h4>
@@ -72,8 +72,508 @@
               
 
 
-<div id="test-project-2" class="section level2">
-<h2>Test Project 2</h2>
+<div id="introduction" class="section level2">
+<h2>Introduction:</h2>
+<p>My dataset is Water-column environmental variables and accompanying discrete CTD measurements collected offshore the U.S. Mid- and South Atlantic. There are many variables but to name a few, there is SHIP, the name of the boat in which the samples were taken, the SITE, the location of the samples taken, the Depth(m), Temperature(C), Conductivity(mS/cm), Turbidity, Conventional Radiocarbon Age, Salinity, and the dissolved Inorganic concentrations of Phoshpate/Silicate/Nitrate/Nitrite/Ammonia. There were thousands of observations in the original dataset but after manipulating the data, I uploaded 45 observations for each variable into R.</p>
+</div>
+<div id="manova-testing" class="section level2">
+<h2>MANOVA Testing:</h2>
+<pre class="r"><code>waterdata &lt;- read.csv(&quot;Project 2 data?.csv&quot;, 
+                  header = TRUE, 
+                   quote=&quot;\&quot;&quot;, 
+                  stringsAsFactors= TRUE, 
+                 strip.white = TRUE)
+
+library(mvtnorm) 
+library(ggExtra)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────── tidyverse 1.3.0.9000 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.1.0     ✓ dplyr   1.0.5
+## ✓ tidyr   1.1.3     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.1</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(dplyr)
+waterdf &lt;- rmvnorm(1000,mean=c(0,0),sigma=matrix(c(1,.5,.5,1),ncol=2,byrow=T))
+water_waterdf &lt;-data.frame(waterdf)%&gt;%rename(Y1=X1,Y2=X2)
+p &lt;- ggplot(water_waterdf, aes(Y1,Y2))+geom_point(alpha=.5)+geom_density_2d(h=2)+coord_fixed()
+ggMarginal(p,type=&quot;density&quot;,xparams = list(bw=.5), yparams=list(bw=.5))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code>library(rstatix)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rstatix&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
+<pre class="r"><code>group &lt;- waterdata$Site
+DVs &lt;- waterdata %&gt;% select(Conductivity, Turbidity, Salinity)
+
+sapply(split(DVs,group), mshapiro_test)</code></pre>
+<pre><code>##           Blake Escaprment Stetson Banks Stetson Banks II Stetson Deep
+## statistic 0.6096572        0.884766      0.808512         0.8529688   
+## p.value   0.0001292705     0.1009022     0.01839434       0.0399536</code></pre>
+<pre class="r"><code>lapply(split(DVs,group), cov)</code></pre>
+<pre><code>## $`Blake Escaprment`
+##              Conductivity    Turbidity    Salinity
+## Conductivity  94.06690228 5.587435e-02 6.030518639
+## Turbidity      0.05587435 9.399114e-05 0.001819264
+## Salinity       6.03051864 1.819264e-03 0.539724574
+## 
+## $`Stetson Banks`
+##              Conductivity    Turbidity    Salinity
+## Conductivity  94.90693372 4.215593e-02 5.743640796
+## Turbidity      0.04215593 3.352083e-05 0.002425285
+## Salinity       5.74364080 2.425285e-03 0.393068651
+## 
+## $`Stetson Banks II`
+##              Conductivity    Turbidity    Salinity
+## Conductivity  93.45488289 2.578173e-02 5.517457774
+## Turbidity      0.02578173 7.533789e-05 0.001360965
+## Salinity       5.51745777 1.360965e-03 0.397202767
+## 
+## $`Stetson Deep`
+##              Conductivity    Turbidity    Salinity
+## Conductivity  80.92990731 0.0764086748 4.402735923
+## Turbidity      0.07640867 0.0001804115 0.001648196
+## Salinity       4.40273592 0.0016481964 0.372871009</code></pre>
+<pre class="r"><code>man1&lt;-manova(cbind(Turbidity, Conductivity)~Site, data=waterdata)
+summary(man1)</code></pre>
+<pre><code>##           Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## Site       3 0.58634   5.8067      6     84 4.265e-05 ***
+## Residuals 42                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man1)</code></pre>
+<pre><code>##  Response Turbidity :
+##             Df    Sum Sq    Mean Sq F value    Pr(&gt;F)    
+## Site         3 0.0038318 0.00127726  13.196 3.299e-06 ***
+## Residuals   42 0.0040652 0.00009679                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response Conductivity :
+##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Site         3    143  47.658  0.5254 0.6673
+## Residuals   42   3810  90.715</code></pre>
+<pre class="r"><code>waterdata%&gt;%group_by(Site)%&gt;%summarize(mean(Conductivity),mean(Turbidity))</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##   Site             `mean(Conductivity)` `mean(Turbidity)`
+##   &lt;fct&gt;                           &lt;dbl&gt;             &lt;dbl&gt;
+## 1 Blake Escaprment                 44.5             0.123
+## 2 Stetson Banks                    45.0             0.142
+## 3 Stetson Banks II                 46.5             0.147
+## 4 Stetson Deep                     48.9             0.139</code></pre>
+<pre class="r"><code>pairwise.t.test(waterdata$Conductivity, waterdata$Site, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  waterdata$Conductivity and waterdata$Site 
+## 
+##                  Blake Escaprment Stetson Banks Stetson Banks II
+## Stetson Banks    0.89             -             -               
+## Stetson Banks II 0.63             0.72          -               
+## Stetson Deep     0.26             0.32          0.55            
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(waterdata$Turbidity,waterdata$Site, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  waterdata$Turbidity and waterdata$Site 
+## 
+##                  Blake Escaprment Stetson Banks Stetson Banks II
+## Stetson Banks    2.3e-05          -             -               
+## Stetson Banks II 6.5e-07          0.19652       -               
+## Stetson Deep     0.00028          0.42890       0.04425         
+## 
+## P value adjustment method: none</code></pre>
+<p>1 Manova, 2 Anova, 12, t tests were ran, 15 tests total. alpha = 0.05/12 = 0.00416</p>
+<p>A one-way MANOVA was conducted to determine the effect of the site where the water sample was taken (Stetson Deep, Blake Escaprment,<br />
+Stetson Banks, and Stetson Banks II) on two dependent variables (Conductivity and Turbidity).
+Examination of bivariate density plots for each group revealed no stark deparures from
+multivariate normality. Examination of covariance matrices for each group revealed
+relative homogeneity. No univariate or multivariate outliers were evident and MANOVA
+was considered to be an appropriate analysis technique.</p>
+<p>Significant differences were found among the three water sites for at least one of the
+dependent variables, Pillai trace = 0.59, pseudo F(6, 84) = 5.8067, p &lt; 0.0001.</p>
+<p>Univariate ANOVAs for each dependent variable were conducted as follow-up tests to the
+MANOVA, using the Bonferroni method for controlling Type I error rates for multiple
+comparisons. The univariate ANOVAs for Turbidity was also significant, F(3,42) = 13.196, p &lt; 0.0001.
+The univariate ANOVAs for Conductivity turned out to not be significant, F(3,42) = 0.5254, p &gt; 0.05.</p>
+<p>Post hoc analysis was performed conducting pairwise comparisons to determine which
+water site differed in conductivity and turbidity. All three Sites were found to differ
+significantly from each other in terms of Turbidity after adjusting for
+multiple comparisons (bonferroni α = .05/12 = 0.00416). However, after adjusting for
+multiple comparisons (bonferroni α = .05/12 = 0.00416), the three sites were found to not differ significantly from each other in terms of conductivity.</p>
+</div>
+<div id="randomization-testing" class="section level2">
+<h2>Randomization Testing:</h2>
+<pre class="r"><code>Not_Modern &lt;- c(1.32,1.58,1.37,1.14,1.23,1.22,1.34,1.35,1.26,1.73,1.86,1.38,1.83,0.82,1.81,1.15,1.07)
+Modern &lt;- c(1.08,0.59,0.23,0.14,0.11,0.03,0.04,0.02,0.03,0.46,0.34,0.13,0.11,0.03,0.03,0.03,0.86,0.89,0.58,0.16,0.06,0.03,0.04,1.42,0.8,0.18,0.03,0.04,0.04)
+
+crit &lt;- data.frame(condition=c(rep(&quot;Modern&quot;,29),rep(&quot;Not Modern&quot;,17)), concentration=c(Modern,Not_Modern))
+
+ggplot(crit,aes(concentration,fill=condition))+geom_histogram(bins=6.5)+
+facet_wrap(~condition,ncol=2)+theme(legend.position=&quot;none&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>crit%&gt;%group_by(condition)%&gt;%
+  summarize(means=mean(concentration))%&gt;%summarize(`mean_diff`=diff(means))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   mean_diff
+##       &lt;dbl&gt;
+## 1      1.09</code></pre>
+<pre class="r"><code>head(perm&lt;-data.frame(condition=crit$condition,concentration=sample(crit$concentration)))</code></pre>
+<pre><code>##   condition concentration
+## 1    Modern          1.32
+## 2    Modern          1.81
+## 3    Modern          1.07
+## 4    Modern          1.73
+## 5    Modern          1.35
+## 6    Modern          1.34</code></pre>
+<pre class="r"><code>perm%&gt;%group_by(condition)%&gt;%
+  summarize(means=mean(concentration))%&gt;%summarize(`mean_diff:`=diff(means))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean_diff:`
+##          &lt;dbl&gt;
+## 1       -0.268</code></pre>
+<pre class="r"><code>perm&lt;-data.frame(condition=crit$condition,concentration=sample(crit$concentration))
+
+rand_dist &lt;- vector()
+  
+for(i in 1:5000){
+new &lt;-data.frame(concentration=sample(crit$concentration),condition=crit$condition)
+rand_dist[i]&lt;-mean(new[new$condition==&quot;Modern&quot;,]$concentration)-
+mean(new[new$condition==&quot;Not Modern&quot;,]$concentration)}
+
+
+{hist(rand_dist,main=&quot;&quot;,ylab=&quot;&quot;); abline(v = c(-1.085, 1.085),col=&quot;red&quot;)}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<pre class="r"><code>mean(rand_dist &gt; 1.085 | rand_dist &lt; -1.085)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>t.test(data=crit, concentration~condition)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  concentration by condition
+## t = -10.85, df = 40.612, p-value = 1.434e-13
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  -1.2880360 -0.8836881
+## sample estimates:
+##     mean in group Modern mean in group Not Modern 
+##                0.2941379                1.3800000</code></pre>
+<p>Conventional Radiocarbon Age was calculated using the radiocarbon decay equation (Stuiver and Polach, 1977). A value of 1 indicates the sample age after 1950 or modern. A value of 0 indicates the sample age is from before 1950 or NOT modern. I used a randomization test to see if there is a difference in dissolved inorganic phosphate concentrations between samples that are modern, and samples that are not modern. Null hypothesis: mean dissolved inorganic phosphate concentration is the same for modern vs. not modern samples. Alternative hypothesis: mean dissolved inorganic phosphate concentration is not the same for modern vs not modern samples. After obtaining a p-value of 0.00 and comparing it to our alpha level of 0.05, we have sufficient data to reject the null hypothesis. This shows that the mean dissolved inorganic phosphate concentration is virtually NOT the same across modern and not modern samples.</p>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear Regression:</h2>
+<pre class="r"><code>library(tidyverse)
+library(sandwich)
+library(lmtest)</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>fit&lt;-lm(Silicate ~ Conventional.Radiocarbon.Age + Nitrate..Nitrite, data=waterdata)
+summary(fit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Silicate ~ Conventional.Radiocarbon.Age + Nitrate..Nitrite, 
+##     data = waterdata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.54954 -0.31774  0.07182  0.28898  1.74722 
+## 
+## Coefficients:
+##                              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                   3.84634    0.40198   9.568 3.24e-12 ***
+## Conventional.Radiocarbon.Age -3.33090    0.35864  -9.288 7.74e-12 ***
+## Nitrate..Nitrite              0.41343    0.01802  22.945  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.711 on 43 degrees of freedom
+## Multiple R-squared:  0.9837, Adjusted R-squared:  0.9829 
+## F-statistic:  1298 on 2 and 43 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>coef(fit)</code></pre>
+<pre><code>##                  (Intercept) Conventional.Radiocarbon.Age 
+##                    3.8463421                   -3.3309012 
+##             Nitrate..Nitrite 
+##                    0.4134331</code></pre>
+<pre class="r"><code>waterdata %&gt;% ggplot(aes(Nitrate..Nitrite, Silicate))+geom_point()+geom_smooth(method = &#39;lm&#39;,se=F)</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>resids&lt;-fit$residuals
+fitvals&lt;-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color=&#39;red&#39;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-3.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids))+geom_qq()</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-4.png" width="672" /></p>
+<pre class="r"><code>summary(fit)$coef[,1:2]</code></pre>
+<pre><code>##                                Estimate Std. Error
+## (Intercept)                   3.8463421 0.40198397
+## Conventional.Radiocarbon.Age -3.3309012 0.35863810
+## Nitrate..Nitrite              0.4134331 0.01801828</code></pre>
+<pre class="r"><code>coeftest(fit, vcov = vcovHC(fit))[,1:2]</code></pre>
+<pre><code>##                                Estimate Std. Error
+## (Intercept)                   3.8463421 0.51301282
+## Conventional.Radiocarbon.Age -3.3309012 0.49666059
+## Nitrate..Nitrite              0.4134331 0.02612267</code></pre>
+<p>Is there a difference in Dissolved inorganic silicate concentration for Modern vs. Not modern samples, (A value of 1 indicates the sample age after 1950 or modern. A value of 0 indicates the sample age is from before 1950 or NOT modern) controlling for dissolved inorganic nitrate and nitrite concentration. H0: Controlling for dissolved inorganic nitrate and nitrite concentration, Age status does not explain variation in inorganic silicate concentration. H0: Controlling for Age status, dissolved inorganic nitrate and nitrite concentration does not explain variation in inorganic silicate concentration. The equation predicting silicate concentration is: Silicate = 3.85 - 0.09(Age) + 0.41(Nitrate/Nitrite). These values were given from the estimate coefficients. Controlling Age status, there is a significant effect of Nitrate/Nitrite on Silicate concentration. For every one unit increase in Nitrate/Nitrite concentration, Silicate concentration increases 0.41 mMole/Liter. The Multiple R-squared value is 0.9837, this says that by taking into account Nitrate/Nitrite concentration and the age of the sample, 98% of silicate proportion will be explained. According to the plots, the data meets the assumptions of linearity, normality, and homoskedasticity. Computing regression results with robust standard errors, I obtained larger standard errors in each category, this shows that if I were to compute a test statistic, the value will be smaller, with a larger p-value, making it less likely to reject the null hypothesis.</p>
+</div>
+<div id="regression-wbootstrapping" class="section level2">
+<h2>Regression w/Bootstrapping:</h2>
+<pre class="r"><code>fit&lt;-lm(Silicate ~ Conventional.Radiocarbon.Age + Nitrate..Nitrite, data=waterdata)
+resids&lt;-fit$residuals
+fitvals&lt;-fit$fitted.values
+
+samp_distn&lt;-replicate(5000, {
+boot_dat &lt;- sample_frac(waterdata, replace=T)
+fit &lt;- lm(Silicate ~ Nitrate..Nitrite + Conventional.Radiocarbon.Age, data=boot_dat) 
+coef(fit) 
+})
+
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept) Nitrate..Nitrite Conventional.Radiocarbon.Age
+## 1   0.4545929       0.02303496                    0.4410362</code></pre>
+<pre class="r"><code>samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% pivot_longer(1:3) %&gt;% group_by(name) %&gt;% 
+  summarize(lower = quantile(value, 0.025), upper = quantile(value, 0.975))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   name                          lower  upper
+##   &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;
+## 1 (Intercept)                   3.02   4.78 
+## 2 Conventional.Radiocarbon.Age -4.24  -2.51 
+## 3 Nitrate..Nitrite              0.364  0.453</code></pre>
+<p>The standard error given from the bootstrap is the highest compared to the original and robust standard error values. The p-value for the bootstrap is also larger than the original SE p-value and robust SE p-value.</p>
+</div>
+<div id="logistic-regression-model" class="section level2">
+<h2>Logistic Regression Model:</h2>
+<pre class="r"><code>library(tidyverse)
+library(lmtest)
+library(plotROC) 
+library(ggplot2)
+
+fit1 &lt;- glm(Conventional.Radiocarbon.Age ~ Depth, data = waterdata, family = &quot;binomial&quot;)
+coeftest(fit1)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##               Estimate Std. Error z value  Pr(&gt;|z|)    
+## (Intercept)  3.8779915  1.0951092  3.5412 0.0003983 ***
+## Depth       -0.0090501  0.0027264 -3.3194 0.0009022 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>coef(fit1)%&gt;%round(5)%&gt;%data.frame</code></pre>
+<pre><code>##                    .
+## (Intercept)  3.87799
+## Depth       -0.00905</code></pre>
+<pre class="r"><code>coef(fit1)%&gt;%exp%&gt;%round(5)%&gt;%data.frame</code></pre>
+<pre><code>##                    .
+## (Intercept) 48.32705
+## Depth        0.99099</code></pre>
+<pre class="r"><code>probs&lt;-predict(fit1,type=&quot;response&quot;)
+
+table(truth=waterdata$Conventional.Radiocarbon.Age, prediction=probs&gt;0.5) %&gt;% addmargins</code></pre>
+<pre><code>##      prediction
+## truth FALSE TRUE Sum
+##   0      12    5  17
+##   1       3   26  29
+##   Sum    15   31  46</code></pre>
+<pre class="r"><code>#accuracy
+(12+26)/46</code></pre>
+<pre><code>## [1] 0.826087</code></pre>
+<pre class="r"><code>#sensitivity
+(26/31)</code></pre>
+<pre><code>## [1] 0.8387097</code></pre>
+<pre class="r"><code>#specificity
+(12/17)</code></pre>
+<pre><code>## [1] 0.7058824</code></pre>
+<pre class="r"><code>#precision
+(26/29)</code></pre>
+<pre><code>## [1] 0.8965517</code></pre>
+<pre class="r"><code>waterdata$prob &lt;- predict(fit1,type=&quot;response&quot;)
+waterdata$predicted &lt;- ifelse(waterdata$prob&gt;.5,&quot;1&quot;,&quot;0&quot;)
+
+logistic &lt;- function(x){exp(x)/(1+exp(x))}
+waterdata$logit&lt;-predict(fit1)
+waterdata$outcome&lt;-factor(waterdata$Conventional.Radiocarbon.Age,levels=c(&quot;1&quot;,&quot;0&quot;))
+
+ggplot(waterdata,aes(logit, fill=outcome))+geom_density(alpha=.3)+
+  geom_vline(xintercept=0,lty=2)+xlab(&quot;logit (log-odds)&quot;)+
+  geom_rug(aes(logit,color=outcome))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>TPR &lt;- (26/31)
+FPR &lt;- 1-(12/17)
+ROCplot&lt;-ggplot(waterdata)+geom_roc(aes(d=Conventional.Radiocarbon.Age,m=prob), n.cuts=0)
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.9300203</code></pre>
+<p>Logistic regression predicting Age of sample from depth. log(odds)=3.877-0.009(Depth) or odds =48.32705 * 0.99^Depth. This can be interpreted by saying going up 1 depth multiplies the odds by a factor of e^-0.009 = 0.99. According to the confusion matrix, 82% accuracy, which is the proportion of correctly classified samples. 83% sensitivity, proportion of Modern age samples correctly classified. 70% specificity, the proportion of NOT modern age samples correctly classified. 89% precision, the proportion classified as Modern who actually are. I found an AUC value of 0.93, this is the probability that a randomly selected sample that is modern has a higher predicted probability than a randomly selected sample that is not modern. 1 is Modern and 0 is Not Modern.</p>
+</div>
+<div id="logistic-regression-model-part2" class="section level2">
+<h2>Logistic Regression Model (part2):</h2>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Matrix&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
+## 
+##     expand, pack, unpack</code></pre>
+<pre><code>## Loaded glmnet 4.0-2</code></pre>
+<pre class="r"><code>fit2&lt;-glm(Conventional.Radiocarbon.Age ~ Turbidity+ Sbeox0 + Silicate + Ammonia, data= waterdata, family=&quot;binomial&quot;)
+coeftest(fit2)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##               Estimate Std. Error z value Pr(&gt;|z|)  
+## (Intercept)   53.38152   34.42451  1.5507  0.12098  
+## Turbidity   -255.17436  185.15957 -1.3781  0.16816  
+## Sbeox0        -1.14778    1.06612 -1.0766  0.28166  
+## Silicate      -1.47812    0.71152 -2.0774  0.03777 *
+## Ammonia       -7.67869    9.30534 -0.8252  0.40926  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>coef(fit2)%&gt;%round(5)%&gt;%data.frame</code></pre>
+<pre><code>##                      .
+## (Intercept)   53.38152
+## Turbidity   -255.17436
+## Sbeox0        -1.14778
+## Silicate      -1.47812
+## Ammonia       -7.67869</code></pre>
+<pre class="r"><code>coef(fit2)%&gt;%exp%&gt;%round(5)%&gt;%data.frame</code></pre>
+<pre><code>##                        .
+## (Intercept) 1.525107e+23
+## Turbidity   0.000000e+00
+## Sbeox0      3.173400e-01
+## Silicate    2.280700e-01
+## Ammonia     4.600000e-04</code></pre>
+<pre class="r"><code>probs2&lt;-predict(fit2,type=&quot;response&quot;)
+table(predict=as.numeric(probs2&gt;.5),truth=waterdata$Conventional.Radiocarbon.Age)%&gt;%addmargins</code></pre>
+<pre><code>##        truth
+## predict  0  1 Sum
+##     0   16  1  17
+##     1    1 28  29
+##     Sum 17 29  46</code></pre>
+<pre class="r"><code>#accuracy
+(12+28)/46</code></pre>
+<pre><code>## [1] 0.8695652</code></pre>
+<pre class="r"><code>#sensitivity
+(28/39)</code></pre>
+<pre><code>## [1] 0.7179487</code></pre>
+<pre class="r"><code>#specificity
+(16/17)</code></pre>
+<pre><code>## [1] 0.9411765</code></pre>
+<pre class="r"><code>#precision
+(28/29)</code></pre>
+<pre><code>## [1] 0.9655172</code></pre>
+<pre class="r"><code>TPR2 &lt;- (28/39)
+FPR2 &lt;- 1-(16/17)
+ROCplot2&lt;-ggplot(waterdata)+geom_roc(aes(d=Conventional.Radiocarbon.Age,m=probs2), n.cuts=0)
+ROCplot2</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROCplot2)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.9959432</code></pre>
+<pre class="r"><code>class_diag &lt;- function(probs,truth){
+  
+  if(is.character(truth)==TRUE) truth&lt;-as.factor(truth)
+  if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+  
+tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),factor(truth, levels=c(0,1)))
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  
+  ord&lt;-order(probs2, decreasing=TRUE)
+  probs3 &lt;- probs2[ord]; truth &lt;- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup &lt;-c(probs3[-1]&gt;=probs3[-length(probs)], FALSE)
+  TPR &lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+  n &lt;- length(TPR)
+  auc &lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}
+class_diag(probs2,waterdata$Conventional.Radiocarbon.Age)</code></pre>
+<pre><code>##         acc      sens      spec       ppv       auc
+## 1 0.9565217 0.9655172 0.9411765 0.9655172 0.9959432</code></pre>
+<pre class="r"><code>set.seed(1234)
+k=10
+data1&lt;-waterdata[sample(nrow(waterdata)),]
+folds&lt;-cut(seq(1:nrow(waterdata)),breaks=k,labels=F)
+
+diags&lt;-NULL
+for(i in 1:k){
+  train&lt;-data1[folds!=i,] 
+  test&lt;-data1[folds==i,]
+  truth&lt;-test$Conventional.Radiocarbon.Age
+  fit&lt;-glm(Conventional.Radiocarbon.Age ~ Turbidity+ Silicate + Sbeox0 + Ammonia, data= train, family=&quot;binomial&quot;)
+  probs&lt;-predict(fit,newdata = test,type=&quot;response&quot;)
+  diags&lt;-rbind(diags,class_diag(probs,truth))
+}</code></pre>
+<pre><code>## Warning: glm.fit: algorithm did not converge</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre><code>## Warning: glm.fit: algorithm did not converge</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre class="r"><code>summarize_all(diags,mean)</code></pre>
+<pre><code>##    acc sens spec       ppv auc
+## 1 0.94 0.95  NaN 0.9416667  NA</code></pre>
+<pre class="r"><code>#LASSO
+y&lt;-as.matrix(waterdata$Conventional.Radiocarbon.Age)
+x&lt;-model.matrix(Conventional.Radiocarbon.Age~ Turbidity + Silicate + Ammonia, data= waterdata)[,-1]
+head(x)</code></pre>
+<pre><code>##   Turbidity Silicate Ammonia
+## 1    0.1366    12.16    0.07
+## 2    0.1403    12.44    0.26
+## 3    0.1299    11.56    0.09
+## 4    0.1265     8.07    0.19
+## 5    0.1193     3.69    0.73
+## 6    0.1230     1.35    0.00</code></pre>
+<pre class="r"><code>cv &lt;- cv.glmnet(x,y)
+cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 4 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                     s0
+## (Intercept)  3.0466694
+## Turbidity    .        
+## Silicate    -0.3665713
+## Ammonia      .</code></pre>
+<pre class="r"><code>set.seed(1234)
+k=10
+data2 &lt;- waterdata %&gt;% sample_frac #put rows of dataset in random order
+folds &lt;- ntile(1:nrow(data2),n=10) #create fold labels
+
+diags&lt;-NULL
+for(i in 1:k){
+  train &lt;- data2[folds!=i,] 
+  test &lt;- data2[folds==i,] 
+  truth &lt;- test$Conventional.Radiocarbon.Age 
+  
+  fit &lt;- glm(Conventional.Radiocarbon.Age~Silicate, 
+             data=train, family=&quot;binomial&quot;)
+  probs &lt;- predict(fit, newdata=test, type=&quot;response&quot;)
+  
+  diags&lt;-rbind(diags,class_diag(probs,truth))
+}
+
+diags%&gt;%summarize_all(mean)</code></pre>
+<pre><code>##    acc  sens spec       ppv auc
+## 1 0.94 0.925  NaN 0.9666667  NA</code></pre>
+<p>I tried to use the rest of my variables but R kept saying using them all together predicted Conventional Radiocarbon Age too accurately, leaving me Turbidity, Sbeox0, Silicate, and Ammonia. Odds = 1.525107e+23 * 0.0^Turb * 3.173400e-01^Sbeox * 2.280700e-01^Silicate * 4.600000e-04^Ammonia. This shows that going up 1 Sbeox0 multiplies odds by a factor of e^-1.14778 = 3.173400e-01. Going up 1 Silicate multiplies odds by a factor of e^-1.47812 = 2.280700e-01. Going up 1 Ammonia multiplies odds by a factor of e^-7.67869 = 4.600000e-04. According to the confusion matrix, 86% accuracy, which is the proportion of correctly classified samples. 71% sensitivity, proportion of Modern age samples correctly classified. 94% specificity, the proportion of NOT modern age samples correctly classified. 96% precision, the proportion classified as Modern who actually are. I found an AUC value of 0.995, this is the probability that a randomly selected sample that is modern has a higher predicted probability than a randomly selected sample that is not modern. An AUC was not given from the 10-fold CV, the classification diagnostics were similar. According to LASSO, silicate is the best predictive variable. An AUC was not given from the 10-fold CV LASSO.</p>
 </div>
 
             
