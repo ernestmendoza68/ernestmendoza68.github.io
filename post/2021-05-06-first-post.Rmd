@@ -1,0 +1,8 @@
+---
+title : "R and Python"
+author: "Ernesto Mendoza"
+date: 2021-05-06
+hiderelated: true
+hidediscus: true
+---
+ Hey everyone! This website is a compilation of my resume and projects that I completed while taking Computational Biology at UT. The projects were done using both R and Python, I hope everyone likes them!

@@ -226,18 +226,18 @@ facet_wrap(~condition,ncol=2)+theme(legend.position=&quot;none&quot;)</code></pr
 ## 1      1.09</code></pre>
 <pre class="r"><code>head(perm&lt;-data.frame(condition=crit$condition,concentration=sample(crit$concentration)))</code></pre>
 <pre><code>##   condition concentration
-## 1    Modern          1.32
-## 2    Modern          1.81
-## 3    Modern          1.07
-## 4    Modern          1.73
-## 5    Modern          1.35
-## 6    Modern          1.34</code></pre>
+## 1    Modern          1.07
+## 2    Modern          0.06
+## 3    Modern          0.23
+## 4    Modern          1.34
+## 5    Modern          0.14
+## 6    Modern          0.03</code></pre>
 <pre class="r"><code>perm%&gt;%group_by(condition)%&gt;%
   summarize(means=mean(concentration))%&gt;%summarize(`mean_diff:`=diff(means))</code></pre>
 <pre><code>## # A tibble: 1 x 1
 ##   `mean_diff:`
 ##          &lt;dbl&gt;
-## 1       -0.268</code></pre>
+## 1       0.0268</code></pre>
 <pre class="r"><code>perm&lt;-data.frame(condition=crit$condition,concentration=sample(crit$concentration))
 
 rand_dist &lt;- vector()
@@ -342,15 +342,15 @@ coef(fit)
 
 samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept) Nitrate..Nitrite Conventional.Radiocarbon.Age
-## 1   0.4545929       0.02303496                    0.4410362</code></pre>
+## 1   0.4440945       0.02241239                    0.4340432</code></pre>
 <pre class="r"><code>samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% pivot_longer(1:3) %&gt;% group_by(name) %&gt;% 
   summarize(lower = quantile(value, 0.025), upper = quantile(value, 0.975))</code></pre>
 <pre><code>## # A tibble: 3 x 3
 ##   name                          lower  upper
 ##   &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;
-## 1 (Intercept)                   3.02   4.78 
-## 2 Conventional.Radiocarbon.Age -4.24  -2.51 
-## 3 Nitrate..Nitrite              0.364  0.453</code></pre>
+## 1 (Intercept)                   3.05   4.77 
+## 2 Conventional.Radiocarbon.Age -4.24  -2.54 
+## 3 Nitrate..Nitrite              0.364  0.450</code></pre>
 <p>The standard error given from the bootstrap is the highest compared to the original and robust standard error values. The p-value for the bootstrap is also larger than the original SE p-value and robust SE p-value.</p>
 </div>
 <div id="logistic-regression-model" class="section level2">
