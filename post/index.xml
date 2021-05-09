@@ -6,7 +6,16 @@
     <description>Recent content in Posts on Ernesto Mendoza</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Thu, 06 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 09 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Python Stuff!</title>
+      <link>/post/2021/05/09/python-stuff/</link>
+      <pubDate>Sun, 09 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2021/05/09/python-stuff/</guid>
+      <description> print(&amp;quot;Just wanted to include a picture of some of my plants because why not (:&amp;quot;) ## Just wanted to include a picture of some of my plants because why not (: library(reticulate) hi&amp;lt;-&amp;quot;Hello&amp;quot; hi=&amp;quot;world&amp;quot; print(r.hi,hi)  ## Hello world </description>
+    </item>
+    
     <item>
       <title>R and Python</title>
       <link>/post/2021/05/06/r-and-python/</link>

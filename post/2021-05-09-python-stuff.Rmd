@@ -1,0 +1,31 @@
+---
+title: Python Stuff!
+author: Ernesto Mendoza
+date: '2021-05-09'
+slug: python-stuff
+categories: []
+tags: []
+description: ''
+---
+ 
+ 
+ 
+```{python}
+print("Just wanted to include a picture of some of my plants because why not (:")
+
+```
+ ![](/post/2021-05-09-python-stuff_files/plantpic.JPG)
+
+```{R}
+library(reticulate)
+
+hi<-"Hello"
+```
+
+```{python}
+hi="world"
+print(r.hi,hi) 
+```
+
+
+
